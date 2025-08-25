@@ -1,16 +1,18 @@
 import requests
-from datetime import datetime
+import datetime
 import sqlite3
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
+import random
+import math
+
 
 def fetch_neo_update_db(conn, c, today):
     dotenv_path = join(dirname(__file__), '.env')
     load_dotenv(dotenv_path)
     API_KEY = os.environ.get("API_KEY")
     BASE_URL = "https://api.nasa.gov/neo/rest/v1/feed"
-    
     
     params = {
         "start_date": today,
@@ -27,28 +29,31 @@ def fetch_neo_update_db(conn, c, today):
         
         distance = round(float(neo["close_approach_data"][0]["miss_distance"]["kilometers"]))
         
-        if distance < 50_000_000:
+        if distance < 20_000_000: #Ignore asteroids more than 20 million km away
+            asteroid_id = neo["id"]
             name = neo["name"].strip("()")
-            date = neo["close_approach_data"][0]["close_approach_date_full"]
+            close_date = neo["close_approach_data"][0]["close_approach_date_full"]
             magnitude = float(neo["absolute_magnitude_h"])
             min_diameter = round(float(neo["estimated_diameter"]["meters"]["estimated_diameter_min"]), 2)
             max_diameter = round(float(neo["estimated_diameter"]["meters"]["estimated_diameter_max"]), 2)
+            angle = random.uniform(0, 360)
 
             hazardous = 1 if neo["is_potentially_hazardous_asteroid"] else 0
+            
             speed = round(float(neo["close_approach_data"][0]["relative_velocity"]["kilometers_per_hour"]))
         
             c.execute('''
                 INSERT OR IGNORE INTO asteroids (
-                    name, close_approach_utc, magnitude, min_diameter, max_diameter,
-                    hazardous, speed, distance, passed
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (name, date, magnitude, min_diameter, max_diameter, hazardous, speed, distance, 0))
+                    id, name, close_approach_utc, magnitude, min_diameter, max_diameter,
+                    hazardous, speed, distance, angle, passed
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (asteroid_id, name, close_date, magnitude, min_diameter, max_diameter, hazardous, speed, distance, angle, 0))
 
     conn.commit()
 
 def update_passed(conn, c, asteroids, notify):
     
-    now_utc = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+    now_utc = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
     c.execute('''
     UPDATE asteroids
     SET passed = 1
@@ -57,11 +62,10 @@ def update_passed(conn, c, asteroids, notify):
     conn.commit()
     
     
-    now_utc = datetime.utcnow()  # or parse your string if you already have it
+    now_utc = datetime.datetime.utcnow()  
 
     for a in asteroids:
-        # Convert the asteroid's time string to a datetime object
-        close_time = datetime.strptime(a['close_approach_utc'], "%Y-%b-%d %H:%M")
+        close_time = datetime.datetime.strptime(a['close_approach_utc'], "%Y-%b-%d %H:%M")
         
         if a['passed'] == 0 and close_time <= now_utc:
             a['passed'] = 1
@@ -77,3 +81,35 @@ def fetch_asteroids(c):
     rows = c.fetchall()
     return [dict(zip(columns, row)) for row in rows]
 
+def km_to_px(value, max_value, width):
+    return (value / max_value) * width
+    
+def utc_to_local(utc_str):
+    hours, minutes = map(int, utc_str.split(":"))
+    
+    today = datetime.date.today()   
+    utc_dt = datetime.datetime(today.year, today.month, today.day,
+                      hours, minutes, tzinfo=datetime.timezone.utc)
+    
+    local_dt = utc_dt.astimezone()
+    return local_dt.strftime("%H:%M")
+
+def time_until(target_str):
+    now = datetime.datetime.now()
+    
+    # Parse target time
+    hours, minutes = map(int, target_str.split(":"))
+    target = datetime.datetime(now.year, now.month, now.day, hours, minutes)
+    
+    # If target has already passed today, assume it's for tomorrow
+    if target <= now:
+        target += datetime.timedelta(days=1)
+    
+    delta = target - now
+    total_seconds = int(delta.total_seconds())
+    
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    
+    return f"{hours}h {minutes}min {seconds}s"
