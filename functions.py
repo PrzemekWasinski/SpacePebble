@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import random
 import math
 
-
 def fetch_neo_update_db(conn, c, today):
     dotenv_path = join(dirname(__file__), '.env')
     load_dotenv(dotenv_path)
@@ -88,8 +87,10 @@ def utc_to_local(utc_str):
     hours, minutes = map(int, utc_str.split(":"))
     
     today = datetime.date.today()   
-    utc_dt = datetime.datetime(today.year, today.month, today.day,
-                      hours, minutes, tzinfo=datetime.timezone.utc)
+    utc_dt = datetime.datetime(
+        today.year, today.month, today.day,
+        hours, minutes, tzinfo=datetime.timezone.utc
+    )
     
     local_dt = utc_dt.astimezone()
     return local_dt.strftime("%H:%M")
@@ -113,3 +114,66 @@ def time_until(target_str):
     seconds = total_seconds % 60
     
     return f"{hours}h {minutes}min {seconds}s"
+
+def get_stats(asteroids, all_time):
+    total = 0
+    biggest = {}
+    fastest = {}
+    brightest = {}
+    closest = {}
+    hazardous = 0
+    
+    today = datetime.datetime.today()
+    formatted_date = today.strftime("%Y-%b-%d")
+    
+    for asteroid in asteroids:
+        if (formatted_date == str(asteroid["close_approach_utc"])[:11] and asteroid["passed"] == 1) or all_time:
+            total += 1
+            
+            if "size" in biggest:
+                if ((asteroid["min_diameter"] + asteroid["max_diameter"]) / 2) > biggest["size"]:
+                    biggest["name"] = asteroid["name"]
+                    biggest["size"] = (asteroid["min_diameter"] + asteroid["max_diameter"]) / 2
+            else:
+                biggest["name"] = asteroid["name"]
+                biggest["size"] = (asteroid["min_diameter"] + asteroid["max_diameter"]) / 2
+                    
+            if "speed" in fastest:
+                if (asteroid["speed"] > fastest["speed"]):
+                    fastest["name"] = asteroid["name"]
+                    fastest["speed"] = asteroid["speed"]
+            else:
+                fastest["name"] = asteroid["name"]
+                fastest["speed"] = asteroid["speed"]
+                    
+            if "magnitude" in brightest:
+                if asteroid["magnitude"] < brightest["magnitude"]:
+                    brightest["name"] = asteroid["name"]
+                    brightest["magnitude"] = asteroid["magnitude"]
+            else:
+                brightest["name"] = asteroid["name"]
+                brightest["magnitude"] = asteroid["magnitude"]
+                
+            if "distance" in closest:
+                if asteroid["distance"] < closest["distance"]:
+                    closest["name"] = asteroid["name"]
+                    closest["distance"] = asteroid["distance"]
+            else:
+                closest["name"] = asteroid["name"]
+                closest["distance"] = asteroid["distance"]
+                
+            if asteroid["hazardous"] == 1:
+                hazardous["hazardous"] += 1
+                
+    stats = {
+        "total": total,
+        "biggest": biggest,
+        "fastest": fastest,
+        "brightest": brightest,
+        "closest": closest,
+        "hazardous": hazardous
+    }
+                
+    return stats
+    
+

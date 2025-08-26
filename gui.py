@@ -6,3 +6,8 @@ def draw_text_centered(window, text, font, rgb_val, x, y):
     img = font.render(text, True, rgb_val)
     rect = img.get_rect(center=(x, y))
     window.blit(img, rect)
+    
+def draw_text_right(window, text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    rect = img.get_rect(topright=(x, y))
+    window.blit(img, rect)
