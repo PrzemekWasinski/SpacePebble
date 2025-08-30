@@ -32,8 +32,8 @@ conn.commit()
 pygame.init()
 clock = pygame.time.Clock()
 
-display_width = 1920
-display_height = 1080
+display_width = 1280
+display_height = 720
 display = pygame.display.set_mode((display_width, display_height))
 
 width, height = 1920, 1080
@@ -68,8 +68,6 @@ while running:
     
     cursor_x, cursor_y = get_virtual_mouse(display_width, display_height)
     
-     
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -204,16 +202,20 @@ while running:
         draw_text_right(screen, str(all_time_stats["total"]), font1, (255, 255, 255), 1910, 75)
         
         draw_text(screen, "Biggest:", font1, (255, 255, 255), 1510, 120)
-        draw_text(screen, f'{all_time_stats["biggest"]["name"]} ({str(all_time_stats["biggest"]["size"])}m)', font2, (255, 255, 255), 1510, 150)
+        draw_text(screen, f'{all_time_stats["biggest"]["name"]}', font2, (255, 255, 255), 1510, 150)
+        draw_text_right(screen, f'({str(round(all_time_stats["biggest"]["size"]))}m)', font2, (255, 255, 255), 1910, 150)
         
         draw_text(screen, "Fastest:", font1, (255, 255, 255), 1510, 195)
-        draw_text(screen, f'{all_time_stats["fastest"]["name"]} ({str(all_time_stats["fastest"]["speed"])}km/ph)', font2, (255, 255, 255), 1510, 225)
+        draw_text(screen, f'{all_time_stats["fastest"]["name"]}', font2, (255, 255, 255), 1510, 225)
+        draw_text_right(screen, f'({str(round(all_time_stats["fastest"]["speed"]))}km/ph)', font2, (255, 255, 255), 1910, 225)
         
         draw_text(screen, "Brightest:", font1, (255, 255, 255), 1510, 270)
-        draw_text(screen, f'{all_time_stats["brightest"]["name"]} ({all_time_stats["brightest"]["magnitude"]}h)', font2, (255, 255, 255), 1510, 300)
+        draw_text(screen, f'{all_time_stats["brightest"]["name"]}', font2, (255, 255, 255), 1510, 300)
+        draw_text_right(screen, f'({str(round(all_time_stats["brightest"]["magnitude"]))}H)', font2, (255, 255, 255), 1910, 300)
         
         draw_text(screen, "Closest:", font1, (255, 255, 255), 1510, 345)
-        draw_text(screen, f'{all_time_stats["closest"]["name"]} ({round(all_time_stats["closest"]["distance"])}km)', font2, (255, 255, 255), 1510, 375)
+        draw_text(screen, f'{all_time_stats["closest"]["name"]}', font2, (255, 255, 255), 1510, 375)
+        draw_text_right(screen, f'({str(round(all_time_stats["closest"]["distance"]))}km)', font2, (255, 255, 255), 1910, 375)
         
         draw_text(screen, "Hazardous Percentage:", font1, (255, 255, 255), 1510, 420)
         if all_time_stats["hazardous"] != 0 and all_time_stats["total"] != 0:
@@ -231,19 +233,23 @@ while running:
         draw_text_right(screen, str(today_stats["total"]), font1, (255, 255, 255), 1910, 75)
         
         draw_text(screen, "Biggest:", font1, (255, 255, 255), 1510, 120)
-        draw_text(screen, f'{today_stats["biggest"]["name"]} ({str(today_stats["biggest"]["size"])}m)', font2, (255, 255, 255), 1510, 150)
+        draw_text(screen, f'{today_stats["biggest"]["name"]}', font2, (255, 255, 255), 1510, 150)
+        draw_text_right(screen, f'({str(round(today_stats["biggest"]["size"]))}m)', font2, (255, 255, 255), 1910, 150)
         
         draw_text(screen, "Fastest:", font1, (255, 255, 255), 1510, 195)
-        draw_text(screen, f'{today_stats["fastest"]["name"]} ({str(today_stats["fastest"]["speed"])}km/ph)', font2, (255, 255, 255), 1510, 225)
+        draw_text(screen, f'{today_stats["fastest"]["name"]}', font2, (255, 255, 255), 1510, 225)
+        draw_text_right(screen, f'({str(round(today_stats["fastest"]["speed"]))}km/ph)', font2, (255, 255, 255), 1910, 225)
         
         draw_text(screen, "Brightest:", font1, (255, 255, 255), 1510, 270)
-        draw_text(screen, f'{today_stats["brightest"]["name"]} ({today_stats["brightest"]["magnitude"]}h)', font2, (255, 255, 255), 1510, 300)
+        draw_text(screen, f'{today_stats["brightest"]["name"]}', font2, (255, 255, 255), 1510, 300)
+        draw_text_right(screen, f'({str(round(today_stats["brightest"]["magnitude"]))}H)', font2, (255, 255, 255), 1910, 300)
         
         draw_text(screen, "Closest:", font1, (255, 255, 255), 1510, 345)
-        draw_text(screen, f'{today_stats["closest"]["name"]} ({round(today_stats["closest"]["distance"])}km)', font2, (255, 255, 255), 1510, 375)
+        draw_text(screen, f'{today_stats["closest"]["name"]}', font2, (255, 255, 255), 1510, 375)
+        draw_text_right(screen, f'({str(round(today_stats["closest"]["distance"]))}km)', font2, (255, 255, 255), 1910, 375)
         
         draw_text(screen, "Hazardous Percentage:", font1, (255, 255, 255), 1510, 420)
-        if today_stats["hazardous"] != 0 and today_stats["total"] != 0:
+        if today_stats["hazardous"] != 0 and today_stats["total"] != 0: 
             hazardous_percentage = round((today_stats["hazardous"] / today_stats["total"]) * 100)
         else:
             hazardous_percentage = 0
