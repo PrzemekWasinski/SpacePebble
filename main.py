@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS asteroids (
 ''')
 conn.commit()
 #True if using a desktop, False if using something like a small raspberry pi screen
-DESKTOP = False
+DESKTOP = True
 
 asteroid_size = 2
 earth_size = 4
@@ -45,8 +45,14 @@ pygame.init()
 pygame.mouse.set_visible(DESKTOP)
 clock = pygame.time.Clock()
 
-display_width = 480
-display_height = 320
+display_width, display_height = 0, 0
+if DESKTOP:
+    display_width = 1920
+    display_height = 1080
+else:
+    display_width = 480
+    display_height = 320
+
 display = pygame.display.set_mode((display_width, display_height), pygame.FULLSCREEN)
 pygame_icon = pygame.image.load('./assets/images/icon.png') 
 pygame.display.set_icon(pygame_icon)
@@ -179,7 +185,7 @@ while running:
                 draw_text(screen, f'Closest approach in: {time_until(utc_to_local(str(asteroid["close_approach_utc"])[-5:]))}', font2, colours["gray_text"], 10, text_y + 30)
                 text_y += 75
             pygame.draw.circle(screen, (255, 0, 0), (int(x) + mover, int(y)), asteroid_size) #The closest approach point of the asteroid
-            draw_trajectory(screen, width, height, asteroid, mover)  
+            draw_trajectory(screen, width, height, asteroid, mover, DESKTOP)  
         else:
             pygame.draw.circle(screen, colours["passed_asteroid"], (int(x) + mover, int(y)), asteroid_size)
             

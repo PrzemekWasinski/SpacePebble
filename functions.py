@@ -194,73 +194,71 @@ def get_virtual_mouse(display_width, display_height):
     scale_y = 1080 / display_height
     return int(mx * scale_x), int(my * scale_y)
 
-def draw_trajectory(screen, display_width, display_height, asteroid, mover):
+def draw_trajectory(screen, display_width, display_height, asteroid, mover, DESKTOP):
     DISPLAY_SIZE = 1080
     SPACE_SIZE_KM = 20_000_000  # km
     KM_PER_PIXEL = SPACE_SIZE_KM / DISPLAY_SIZE  # ≈ 18518.5 km per pixel
-
     x = asteroid["x"]
     y = asteroid["y"]
     speed_kmph = asteroid["speed"]
     close_approach_utc = asteroid["close_approach_utc"]
-    
+   
     cx, cy = display_width // 2, display_height // 2  # center of canvas
-
     # Vector from center to closest point
     dx = x - cx
     dy = y - cy
-
     if dx == 0 and dy == 0:
         return  # point is center, no preferred line
-
     # Direction perpendicular to center->closest point
     dir_x, dir_y = dy, -dx
     length = (dir_x**2 + dir_y**2)**0.5
     dir_x /= length
     dir_y /= length
-
     # Draw trajectory line
-    square_size = 1080
-    left   = (display_width - square_size) // 2
-    top    = (display_height - square_size) // 2
-    right  = left + square_size
-    bottom = top + square_size
-
+    
+    # FIXED: Define clipping bounds with your desired x range
+    left, right = 0, 0
+    if DESKTOP:
+        left   = 420
+        right  = 1500
+    else:
+        left   = 640
+        right  = 1920
+    top    = 0  # You can adjust this if needed
+    bottom = display_height  # Full height since y doesn't matter
+    width  = right - left
+    height = bottom - top
+    
     # create a very long line along (dir_x, dir_y) through (x, y)
     scale = max(display_width, display_height) * 2
     start_pos = ((x - dir_x * scale) + mover, y - dir_y * scale)
     end_pos   = ((x + dir_x * scale) + mover, y + dir_y * scale)
-
-    # clip against the square
-    rect = pygame.Rect(left, top, square_size, square_size)
+    # clip against the rectangle with your specified bounds
+    rect = pygame.Rect(left, top, width, height)
     clipped = rect.clipline(start_pos, end_pos)
+   
+    if clipped:  # Only draw if the line intersects the clipping rectangle
+        pygame.draw.line(screen, colours["trajectory"], clipped[0], clipped[1], 1)
     
-    pygame.draw.line(screen, colours["trajectory"], clipped[0], clipped[1], 1)
-
     # === Calculate asteroid position ===
     close_approach = datetime.datetime.strptime(close_approach_utc, "%Y-%b-%d %H:%M")
     close_approach = close_approach.replace(tzinfo=datetime.timezone.utc)
     now = datetime.datetime.now(datetime.timezone.utc)
-
     # Time difference in hours
     delta_hours = (close_approach - now).total_seconds() / 3600
-
     # Distance in km along trajectory
     distance_km = speed_kmph * delta_hours
-
     # Convert km to pixels
     distance_px = distance_km / KM_PER_PIXEL
-
     # Current asteroid position
     asteroid_x = x - dir_x * distance_px
     asteroid_y = y - dir_y * distance_px
-    
+   
     asteroid["x"] = asteroid_x + mover
     asteroid["y"] = asteroid_y
     asteroid["ca_distance"] = distance_km
-    
+   
     pixel_distance = math.hypot(asteroid_x - cx, asteroid_y - cy)
     asteroid["earth_distance"] = pixel_distance * KM_PER_PIXEL
-
     # Draw asteroid
     pygame.draw.circle(screen, colours["live_asteroid"], (int(asteroid_x) + mover, int(asteroid_y)), 2)
